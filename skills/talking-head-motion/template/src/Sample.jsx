@@ -1,8 +1,8 @@
 import React from 'react';
-import {Film} from './Film.jsx';
+import {Film, Parts} from './Film.jsx';
 import {CONFIG} from './config.js';
 import {SAMPLE} from './samples.js';
-import {resolveStyle} from './styles.js';
+import {resolveStyle, STYLES, AVATARS} from './styles.js';
 
 const ALL = {cards: true, overlays: true, avatar: true, subtitles: true, sfx: true, music: false};
 
@@ -35,3 +35,9 @@ export const Teaser = ({style, label, modules}) => {
   const subs = [{from: 0, to: 1.4, text: S.chapter.sub}, {from: 1.4, to: 4, text: S.cards3.sub}];
   return <Film {...common(style, modules)} shots={shots} subs={subs} label={label} />;
 };
+
+// 零件对照表：styles 是这次候选的几套风格（2–4 套）
+export const PartsSheet = ({styles}) => (
+  <Parts looks={styles.map((s) => resolveStyle(s))} names={styles.map((s) => STYLES[s].name)} talk={CONFIG.talk} crop={CONFIG.avatar.crop}
+    shapes={Object.values(AVATARS)} sample={{title: SAMPLE.chapter.title, item: SAMPLE.cards3.items[0], sub: SAMPLE.cards3.sub}} />
+);

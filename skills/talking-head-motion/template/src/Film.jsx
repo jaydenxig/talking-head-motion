@@ -377,3 +377,87 @@ export const Film = (props) => {
     </Ctx.Provider>
   );
 };
+
+// ---------- 零件对照表：把每套风格拆开并排摆，方便用户逐项挑 ----------
+// rows：配色 / 字体 / 卡片 / 字幕 / 动效和音效；头像形状单独一行，四种形状和风格无关，任选
+const Cell = ({children, bg, h}) => (
+  <div style={{height: h, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg, borderRadius: 14, overflow: 'hidden', position: 'relative'}}>{children}</div>
+);
+const RowLabel = ({children, h}) => (
+  <div style={{height: h, display: 'flex', alignItems: 'center', fontFamily: '"Noto Sans SC"', fontWeight: 900, fontSize: 30, color: '#14181F'}}>{children}</div>
+);
+
+export const Parts = ({looks, names, talk, crop, shapes, sample}) => {
+  const {width} = useVideoConfig();
+  const gap = 18, labelW = 170;
+  const colW = (width - 60 - labelW - gap * looks.length) / looks.length;
+  const H = {head: 70, palette: 110, font: 130, card: 190, sub: 110, motion: 90, avatar: 250};
+  const col = (L, i, child, h) => (
+    <Ctx.Provider key={i} value={{...L, handoff: 0.3}}>
+      <div style={{width: colW}}>{child(L, h)}</div>
+    </Ctx.Provider>
+  );
+  const row = (label, h, child) => (
+    <div style={{display: 'flex', gap, marginBottom: gap}}>
+      <div style={{width: labelW}}><RowLabel h={h}>{label}</RowLabel></div>
+      {looks.map((L, i) => col(L, i, child, h))}
+    </div>
+  );
+  const letters = 'ABCDEFGH';
+  return (
+    <AbsoluteFill style={{background: '#F4F5F8', padding: 30}}>
+      {row('', H.head, (L, h) => {
+        const i = looks.indexOf(L);
+        return <RowLabel h={h}><span style={{fontSize: 40}}>{letters[i]}</span>&nbsp;·&nbsp;{names[i]}</RowLabel>;
+      })}
+      {row('配色', H.palette, (L, h) => (
+        <Cell bg={L.p.bg} h={h}>
+          {[L.p.accent, L.p.accent2, L.p.ink, L.p.keyword].map((c) => <div key={c} style={{width: 56, height: 56, borderRadius: 28, background: c, margin: '0 8px', border: '3px solid rgba(255,255,255,.7)'}} />)}
+        </Cell>
+      ))}
+      {row('字体', H.font, (L, h) => (
+        <Cell bg={L.p.bg} h={h}><div style={{textAlign: 'center'}}><Title size={58}>{sample.title}</Title><div style={{fontSize: 20, color: L.p.sub, fontFamily: '"Noto Sans SC"', marginTop: 6}}>{L.font.name}</div></div></Cell>
+      ))}
+      {row('卡片', H.card, (L, h) => (
+        <Cell bg={L.p.bg} h={h}>
+          <Box style={{padding: '20px 30px', transform: `rotate(${tiltOf(L)}deg)`}}>
+            <Kicker>01</Kicker>
+            <Title size={42} style={{marginTop: 8}}>{sample.item}</Title>
+          </Box>
+        </Cell>
+      ))}
+      {row('字幕', H.sub, (L, h) => {
+        const look = {
+          stroke: {color: '#fff', WebkitTextStroke: '6px rgba(12,18,32,.88)', paintOrder: 'stroke fill'},
+          box: {color: '#fff', background: 'rgba(14,14,20,.78)', padding: '4px 18px', borderRadius: 10},
+          shadow: {color: '#fff', WebkitTextStroke: '4px rgba(20,20,24,.6)', paintOrder: 'stroke fill', textShadow: '0 3px 14px rgba(0,0,0,.45)'},
+        }[L.subtitle];
+        const parts = sample.sub.split(/(\[[^\]]+\])/);
+        return (
+          <Cell bg={L.p.bg} h={h}>
+            <span style={{fontSize: Math.min(36, colW / 13), fontFamily: L.font.sub, fontWeight: L.font.subWeight, whiteSpace: 'nowrap', ...look}}>
+              {parts.map((x, k) => x.startsWith('[') ? <span key={k} style={{color: L.p.keyword}}>{x.slice(1, -1)}</span> : x)}
+            </span>
+          </Cell>
+        );
+      })}
+      {row('动效 · 音效', H.motion, (L, h) => (
+        <Cell bg="#fff" h={h}><div style={{fontFamily: '"Noto Sans SC"', fontSize: 26, fontWeight: 700, color: '#14181F', textAlign: 'center', lineHeight: 1.5}}>{L.motion.name}<br /><span style={{color: '#5A6475', fontWeight: 500}}>音效：{L.sfx.name}</span></div></Cell>
+      ))}
+      <div style={{display: 'flex', gap, alignItems: 'center'}}>
+        <div style={{width: labelW}}><RowLabel h={H.avatar}>头像形状</RowLabel></div>
+        {shapes.map((A, i) => {
+          const vh = A.h / crop.scale, vw = vh * 16 / 9;
+          return (
+            <div key={i} style={{width: colW, height: H.avatar, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff', borderRadius: 14}}>
+              <div style={{width: A.w * 0.8, height: A.h * 0.8, borderRadius: A.radius, overflow: 'hidden', position: 'relative', border: '4px solid #fff', boxShadow: '0 8px 24px rgba(0,0,0,.18)'}}>
+                <OffthreadVideo src={staticFile(talk)} startFrom={90} muted style={{position: 'absolute', width: vw * 0.8, height: vh * 0.8, left: (A.w / 2 - crop.x * vw) * 0.8, top: (A.h / 2 - crop.y * vh) * 0.8}} />
+              </div>
+              <div style={{fontFamily: '"Noto Sans SC"', fontSize: 24, fontWeight: 700, marginTop: 12, color: '#14181F'}}>{i + 1}. {A.name}</div>
+            </div>
+          );
+        })}
+      </div>
+    </AbsoluteFill>
+  );
+};

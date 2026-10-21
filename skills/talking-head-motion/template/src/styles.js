@@ -15,10 +15,9 @@ export const MONO = '"JetBrains Mono", ui-monospace, Menlo, monospace';
 export const AVATARS = {
   circle: {name: '圆形', w: 200, h: 200, radius: '50%'},
   rounded: {name: '圆角方形', w: 200, h: 200, radius: 36},
-  portrait: {name: '竖长方形', w: 180, h: 240, radius: 22},
-  blob: {name: '不规则圆', w: 210, h: 200, radius: '58% 42% 47% 53% / 52% 46% 54% 48%'},
-  hex: {name: '六边形', w: 210, h: 210, clip: 'polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0% 50%)'},
-};
+  square: {name: '正方形（直角）', w: 200, h: 200, radius: 0},
+  oval: {name: '竖椭圆', w: 180, h: 230, radius: '50%'},
+}
 
 // 进场动作：p 从 0 到 1
 export const MOTIONS = {
@@ -63,24 +62,24 @@ export const STYLES = {
     p: {bg: '#F3F5F9', line: 'rgba(30,60,120,.06)', glowA: 'rgba(77,140,255,.28)', glowB: 'rgba(80,200,230,.20)', ink: '#14181F', sub: '#5A6475', accent: '#2F6BFF', accent2: '#16B5E8', card: '#FFFFFF', keyword: '#4DB5FF'}},
   'tech-2': {name: '暗夜霓虹', category: 'tech', bg: 'darkgrid', font: 'qingke', card: 'glass', avatar: 'rounded', motion: 'snap', sfx: 'tech', subtitle: 'stroke',
     p: {dark: true, bg: '#0B0D17', line: 'rgba(120,140,255,.10)', glowA: 'rgba(140,80,255,.40)', glowB: 'rgba(0,220,255,.30)', ink: '#F2F4FF', sub: '#9AA3C7', accent: '#8B5CFF', accent2: '#00E0FF', card: 'rgba(255,255,255,.06)', keyword: '#00E0FF'}},
-  'tech-3': {name: '终端极客', category: 'tech', bg: 'scan', font: 'sans', card: 'terminal', avatar: 'hex', motion: 'snap', sfx: 'tech', subtitle: 'box',
+  'tech-3': {name: '终端极客', category: 'tech', bg: 'scan', font: 'sans', card: 'terminal', avatar: 'square', motion: 'snap', sfx: 'tech', subtitle: 'box',
     p: {dark: true, bg: '#0A0F0C', line: 'rgba(80,255,150,.06)', glowA: 'rgba(40,255,140,.18)', glowB: 'rgba(40,255,140,.10)', ink: '#D9FFE8', sub: '#6FAF8A', accent: '#2BFF88', accent2: '#B6FF3B', card: '#0F1A14', keyword: '#2BFF88'}},
 
   'life-1': {name: '薄荷小清新', category: 'life', bg: 'blobs', font: 'xiaowei', card: 'soft', avatar: 'circle', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
     p: {bg: '#F2FAF6', line: 'rgba(0,0,0,0)', glowA: 'rgba(120,220,190,.45)', glowB: 'rgba(255,210,170,.40)', ink: '#24423A', sub: '#6B8A80', accent: '#2FB38A', accent2: '#7FD8BE', card: '#FFFFFF', keyword: '#7FE0C2'}},
-  'life-2': {name: '暖阳胶片', category: 'life', bg: 'paper', font: 'serif', card: 'paper', avatar: 'portrait', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
+  'life-2': {name: '暖阳胶片', category: 'life', bg: 'paper', font: 'serif', card: 'paper', avatar: 'oval', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
     p: {bg: '#F3EADB', line: 'rgba(120,90,60,.10)', glowA: 'rgba(255,190,120,.35)', glowB: 'rgba(230,150,110,.25)', ink: '#3A2A1E', sub: '#8A7260', accent: '#D9693A', accent2: '#E9A15B', card: '#FFFBF3', keyword: '#FFB37A'}},
-  'life-3': {name: '手账贴纸', category: 'life', bg: 'dots', font: 'kuaile', card: 'sticker', avatar: 'blob', motion: 'bouncy', sfx: 'crisp', subtitle: 'box',
+  'life-3': {name: '手账贴纸', category: 'life', bg: 'dots', font: 'kuaile', card: 'sticker', avatar: 'rounded', motion: 'bouncy', sfx: 'crisp', subtitle: 'box',
     p: {bg: '#FFF8E6', line: 'rgba(60,40,0,.10)', glowA: 'rgba(255,200,80,.25)', glowB: 'rgba(255,140,170,.20)', ink: '#2A2320', sub: '#7A6A5E', accent: '#FF6B8B', accent2: '#FFC23D', card: '#FFFFFF', keyword: '#FFC23D'}},
 
-  'family-1': {name: '奶油童趣', category: 'family', bg: 'blobs', font: 'kuaile', card: 'sticker', avatar: 'blob', motion: 'bouncy', sfx: 'soft', subtitle: 'box',
+  'family-1': {name: '奶油童趣', category: 'family', bg: 'blobs', font: 'kuaile', card: 'sticker', avatar: 'oval', motion: 'bouncy', sfx: 'soft', subtitle: 'box',
     p: {bg: '#FFF3EE', line: 'rgba(0,0,0,0)', glowA: 'rgba(255,170,190,.45)', glowB: 'rgba(170,210,255,.40)', ink: '#4A2E35', sub: '#9A7880', accent: '#FF7FA3', accent2: '#7FB8FF', card: '#FFFFFF', keyword: '#FFB0C8'}},
   'family-2': {name: '温馨暖橙', category: 'family', bg: 'paper', font: 'xiaowei', card: 'soft', avatar: 'circle', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
     p: {bg: '#FFF1E2', line: 'rgba(160,90,30,.08)', glowA: 'rgba(255,170,90,.40)', glowB: 'rgba(255,220,150,.40)', ink: '#4A2A12', sub: '#9A6A45', accent: '#F07F2E', accent2: '#FFB547', card: '#FFFFFF', keyword: '#FFB547'}},
   'family-3': {name: '森林绿意', category: 'family', bg: 'blobs', font: 'sans', card: 'soft', avatar: 'rounded', motion: 'spring', sfx: 'soft', subtitle: 'stroke',
     p: {bg: '#EEF3EA', line: 'rgba(0,0,0,0)', glowA: 'rgba(140,190,120,.40)', glowB: 'rgba(230,220,160,.40)', ink: '#22331F', sub: '#6A7E62', accent: '#4F8A3A', accent2: '#A3C46A', card: '#FFFFFF', keyword: '#B8E08A'}},
 
-  'knowledge-1': {name: '白底杂志', category: 'knowledge', bg: 'plain', font: 'serif', card: 'editorial', avatar: 'portrait', motion: 'smooth', sfx: 'crisp', subtitle: 'stroke',
+  'knowledge-1': {name: '白底杂志', category: 'knowledge', bg: 'plain', font: 'serif', card: 'editorial', avatar: 'square', motion: 'smooth', sfx: 'crisp', subtitle: 'stroke',
     p: {bg: '#F4F3EF', line: 'rgba(0,0,0,.05)', glowA: 'rgba(0,0,0,0)', glowB: 'rgba(0,0,0,0)', ink: '#111111', sub: '#666666', accent: '#E8432D', accent2: '#111111', card: '#FFFFFF', keyword: '#FF7A66'}},
   'knowledge-2': {name: '黑板粉笔', category: 'knowledge', bg: 'chalk', font: 'brush', card: 'chalk', avatar: 'circle', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
     p: {dark: true, bg: '#1F3A30', line: 'rgba(255,255,255,.04)', glowA: 'rgba(255,255,255,.06)', glowB: 'rgba(255,255,255,.04)', ink: '#F4F1E6', sub: '#B9C4B6', accent: '#FFD866', accent2: '#8FD3FF', card: 'rgba(255,255,255,.04)', keyword: '#FFD866'}},
@@ -96,14 +95,14 @@ export const STYLES = {
 
   'travel-1': {name: '落日橘', category: 'travel', bg: 'sunset', font: 'xiaowei', card: 'glass', avatar: 'circle', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
     p: {dark: true, bg: '#2A1430', line: 'rgba(255,255,255,0)', glowA: 'rgba(255,140,60,.55)', glowB: 'rgba(255,80,120,.40)', ink: '#FFF4EA', sub: '#F2C9B0', accent: '#FF9A3C', accent2: '#FF5E7E', card: 'rgba(255,255,255,.10)', keyword: '#FFC27A'}},
-  'travel-2': {name: '海岸蓝', category: 'travel', bg: 'blobs', font: 'xiaowei', card: 'soft', avatar: 'portrait', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
+  'travel-2': {name: '海岸蓝', category: 'travel', bg: 'blobs', font: 'sans', card: 'soft', avatar: 'rounded', motion: 'spring', sfx: 'crisp', subtitle: 'shadow',
     p: {bg: '#EEF7FA', line: 'rgba(0,0,0,0)', glowA: 'rgba(90,190,230,.45)', glowB: 'rgba(255,230,170,.40)', ink: '#123040', sub: '#5D7F8E', accent: '#1E9BD7', accent2: '#5FD0C5', card: '#FFFFFF', keyword: '#8FE3FF'}},
-  'travel-3': {name: '山野墨绿', category: 'travel', bg: 'paper', font: 'brush', card: 'paper', avatar: 'blob', motion: 'smooth', sfx: 'soft', subtitle: 'stroke',
+  'travel-3': {name: '山野墨绿', category: 'travel', bg: 'paper', font: 'brush', card: 'paper', avatar: 'oval', motion: 'smooth', sfx: 'soft', subtitle: 'stroke',
     p: {bg: '#E9E6DA', line: 'rgba(40,60,40,.08)', glowA: 'rgba(80,120,80,.25)', glowB: 'rgba(200,170,110,.25)', ink: '#1F2B20', sub: '#5E6B5A', accent: '#2F5D3A', accent2: '#C08A3E', card: '#F8F6EE', keyword: '#E8C27A'}},
 };
 
 // 把 config.style 解析成一套完整的样子。
-// style 可以是字符串 'life-1'，也可以是混搭对象：{base: 'life-1', palette: 'tech-1', font: 'kuaile', avatar: 'hex'}
+// style 可以是字符串 'life-1'，也可以是混搭对象：{base: 'life-1', palette: 'tech-1', font: 'kuaile', avatar: 'square'}
 // 混搭时每一项既可以写风格编号（取那套风格的这一项），也可以直接写零件名。
 export const resolveStyle = (style) => {
   const s = typeof style === 'string' ? {base: style} : style;

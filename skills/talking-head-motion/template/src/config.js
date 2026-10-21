@@ -19,7 +19,7 @@ export const CONFIG = {
   },
 
   // 风格：写一个风格编号（见 styles.js），或者混搭：
-  // style: {base: 'life-1', palette: 'tech-1', font: 'kuaile', avatar: 'hex'}
+  // style: {base: 'life-1', palette: 'tech-1', font: 'kuaile', avatar: 'oval'}
   style: 'tech-1',
 
   // 小头像：corner 可选 'top-left' | 'top-right'。形状由风格里的 avatar 决定，也可以在 style 里单独换。

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>选择要做的部分</title>
+<style>
+  body { font-family: system-ui, -apple-system, "PingFang SC", sans-serif; max-width: 520px; margin: 32px auto; padding: 0 16px; color: #14181f; background: #f6f7fa; }
+  h1 { font-size: 20px; }
+  label { display: flex; gap: 10px; align-items: center; padding: 11px 14px; border: 1px solid #dde2ea; border-radius: 10px; margin-bottom: 8px; background: #fff; cursor: pointer; }
+  input { width: 20px; height: 20px; }
+  .all { font-weight: 700; }
+  button { margin-top: 12px; padding: 11px 20px; border-radius: 10px; border: 0; background: #2f6bff; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+  #out { margin-top: 12px; color: #5a6475; }
+</style>
+</head>
+<body>
+<!-- 没有多选提问工具时，把这个页面发给用户：点选后复制结果发回给 AI -->
+<h1>这次要做哪些部分？</h1>
+<label class="all"><input type="checkbox" id="all">全选</label>
+<div id="list"></div>
+<div id="out">（还没选）</div>
+<button id="copy">复制选择结果</button>
+<script>
+  const items = [
+    ['图卡动效', '讲到重点时，画面切到一张会动的信息卡：截图、要点清单、数字等，帮观众看懂'],
+    ['章节卡 / 便签 / 小标签', '人在说话时叠在画面角落的小卡片：章节卡显示「第几部分」，便签写一句重点，小标签说明「这是什么」'],
+    ['小头像', '画面切到信息卡时，把你缩成角落里的一个小窗，观众始终看得到你'],
+    ['字幕', '画面底部的文字，重点词变色；另外给一份字幕文件，方便在剪映里改'],
+    ['音效', '画面上有东西出现时的短促声音，比如「啪」「叮」「嗖」，不到 1 秒，跟着动画响'],
+    ['配乐', '整段视频底下轻轻放的背景音乐，推荐几首可以商用、不侵权的曲子给你试听'],
+    ['封面', '视频在列表里显示的那张图，出横屏和竖屏两张'],
+    ['发布文案', '抖音、小红书、视频号、B 站发布时要填的标题、简介、话题'],
+  ];
+  const list = document.getElementById('list');
+  items.forEach((t, i) => { const l = document.createElement('label'); l.innerHTML = `<input type="checkbox" data-i="${i}"><span><b>${t[0]}</b><br><small style="color:#5a6475">${t[1]}</small></span>`; list.appendChild(l); });
+  const boxes = [...list.querySelectorAll('input')];
+  const all = document.getElementById('all');
+  const out = document.getElementById('out');
+  const text = () => { const s = boxes.filter((b) => b.checked).map((b) => items[b.dataset.i][0]); return s.length ? `我要做：${s.join('、')}` : ''; };
+  const update = () => { out.textContent = text() || '（还没选）'; all.checked = boxes.every((b) => b.checked); };
+  all.onchange = () => { boxes.forEach((b) => (b.checked = all.checked)); update(); };
+  boxes.forEach((b) => (b.onchange = update));
+  document.getElementById('copy').onclick = () => { const t = text(); if (t) navigator.clipboard.writeText(t).then(() => (out.textContent = t + '（已复制）')); };
+</script>
+</body>
+</html>

@@ -19,15 +19,23 @@ AI 听完口播后先判断类型，再出这一类的 3 套风格（编号对�
 | 背景 `bg` | grid 细网格 · darkgrid 深色网格 · scan 扫描线 · blobs 柔光色块 · paper 纸纹 · dots 圆点 · plain 极简竖线 · chalk 黑板 · lined 横线本 · darkglow 深色光晕 · sunset 落日渐变 |
 | 字体 `font` | sans 黑体 · serif 宋体 · kuaile 圆润可爱 · brush 毛笔 · xiaowei 文艺 · qingke 方正粗标题 |
 | 卡片 `card` | clean 白卡 · glass 玻璃 · terminal 发光描边 · soft 大圆角 · paper 纸片加胶带 · sticker 粗描边贴纸 · editorial 杂志顶线 · chalk 虚线 · note 侧边色条 |
-| 头像形状 `avatar` | circle 圆形 · rounded 圆角方形 · portrait 竖长方形 · blob 不规则圆 · hex 六边形 |
+| 头像形状 `avatar` | circle 圆形 · rounded 圆角方形 · square 正方形（直角） · oval 竖椭圆（和风格无关，四种任选） |
 | 动效 `motion` | spring 弹出 · smooth 平滑上浮 · bouncy 俏皮弹跳 · snap 利落滑入 |
 | 音效包 `sfx` | crisp 清脆 UI · soft 柔和温暖 · tech 科技电子 · none 不要 |
 | 字幕 `subtitle` | stroke 白字描边 · box 色块底 · shadow 白字投影 |
 
 头像位置（左上 / 右上）在 `config.js` 的 `avatar.corner` 里单独选。
 
+## 发给用户的东西
+`make-samples.mjs` 一次出齐：
+- **零件对照表**（`零件对照表.png`）：几套风格的配色、字体、卡片、字幕、动效和音效按 A / B / C / D 并排摆，下面一行是四种头像形状。用户靠它逐项挑，这是最重要的一张图。
+- 每套风格的 4 张静帧总览和 4 秒小动图：看整体效果、听音效。
+- `样板说明.md`：文字版对照。
+
 ## 提问方式
-样板发出去之后，每个零件问一个问题，选项写成「A 落日橘的」「B 海岸蓝的」「C 山野墨绿的」，再加一个「都不要，换一种」。
+样板发出去之后，先问一道：「整套选一个」还是「逐项混搭」。整套选就直接给 A / B / C / D。
+逐项混搭时每个零件问一道单选题，选项写成「A 落日橘的」「B 海岸蓝的」「C 山野墨绿的」，再加一个「都不要，换一种」。头像形状问「1 圆形 / 2 圆角方形 / 3 正方形 / 4 竖椭圆」，头像位置问「左上 / 右上」。
+没有提问工具的环境，就给一个点选页面（每项一排单选按钮，顶部有「整套选 A / B / C / D」的快捷按钮，底部一个「复制选择结果」）。
 用户回答后，写成：
 ```js
 style: {base: 'travel-2', palette: 'travel-1', font: 'travel-3', avatar: 'hex'}
