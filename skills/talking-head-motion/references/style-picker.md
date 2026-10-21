@@ -38,9 +38,9 @@ AI 听完口播后先判断类型，再出这一类的 3 套风格（编号对�
 没有提问工具的环境，就给一个点选页面（每项一排单选按钮，顶部有「整套选 A / B / C / D」的快捷按钮，底部一个「复制选择结果」）。
 用户回答后，写成：
 ```js
-style: {base: 'travel-2', palette: 'travel-1', font: 'travel-3', avatar: 'hex'}
+style: {base: 'travel-2', palette: 'travel-1', font: 'travel-3', avatar: 'oval'}
 ```
-然后 `node tools/make-samples.mjs --styles travel-2 --mix '{"palette":"travel-1","font":"travel-3","avatar":"hex"}'` 出确认图。
+然后 `node tools/make-samples.mjs --styles travel-2 --mix '{"palette":"travel-1","font":"travel-3","avatar":"oval"}'` 出确认图。
 
 ## 加一套新风格
 在 `styles.js` 的 `STYLES` 里照格式加一项（编号 `类型-序号`），再出样板检查：
