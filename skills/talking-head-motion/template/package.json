@@ -1,0 +1,20 @@
+{
+  "name": "talking-head-motion-template",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/noto-sans-sc": "^5.3.1",
+    "@remotion/cli": "4.0.371",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.371"
+  },
+  "scripts": {
+    "still": "remotion still src/index.js Talk out/still.png --frame=120",
+    "render": "remotion render src/index.js Talk out/talk.mp4",
+    "srt": "node tools/make-srt.mjs out/subtitles.srt",
+    "check": "node tools/check-pacing.mjs",
+    "sfx": "bash tools/fetch-sfx.sh"
+  }
+}
