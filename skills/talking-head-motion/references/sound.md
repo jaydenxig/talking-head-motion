@@ -4,14 +4,17 @@
 1. **只用真实录音，不用程序合成或 AI 生成的音效。** 合成音效是「AI 味」的主要来源。
 2. **压在人声下面**：音量约为原始的 0.25–0.35（大约低 9–12 dB），只做点缀。
 3. **和画面动作同帧**：音效和动画共用 `src/sfx.js` 的同一张节拍表，由代码在同一帧触发。
-4. **同一种动作永远配同一个声音**，让观众形成条件反射：
-   | 动作 | 声音 |
-   |---|---|
-   | 从口播进入图卡段落 | whoosh-short |
-   | 卡片弹出、便签、章节卡 | pop |
-   | 列表 / 小卡逐个出现 | click-soft |
-   | 圈出重点 | click |
-   | 数字到顶、结论胶囊 | ping |
+4. **同一种动作永远配同一个声音**，让观众形成条件反射。声音由风格里的「音效包」决定（`template/src/styles.js` 的 `SFX_PACKS`），用户挑风格时可以单独换：
+   | 动作 | 清脆 UI `crisp` | 柔和温暖 `soft` | 科技电子 `tech` |
+   |---|---|---|---|
+   | 从口播进入图卡段落 | whoosh-short | whoosh-short | glitch-3 |
+   | 卡片弹出 | pop | click-soft | key-press |
+   | 列表 / 小卡逐个出现 | click-soft | click-soft | key-press |
+   | 圈出重点 | click | sparkle | click |
+   | 数字到顶、结论胶囊 | ping | chime | notification |
+   | 章节卡、便签 | pop | click-soft | key-press |
+
+   也可以选 `none`（不要音效），或者在第 0 步不勾音效。
 5. **少而精**：只放在关键时刻。觉得吵就先删 click-soft。
 
 ## 音效来源

@@ -8,4 +8,4 @@
 | [HyperFrames](https://github.com/heygen-com/hyperframes)（HeyGen） | 流程和音效规则的参考；音效从它的 npm 包里取 | Apache-2.0 | 「只用真实录音、音量压低、和动作同帧」等音效规则参考了它的 media-use skill。 |
 | Pixabay 音效（经 HyperFrames 分发） | 模板默认音效 | [Pixabay Content License](https://pixabay.com/service/license-summary/) | 可商用、无需署名，但不允许把音效文件单独转存分发，所以本仓库不包含，用 `tools/fetch-sfx.sh` 下载。 |
 | [RobustVideoMatting](https://github.com/PeterL1n/RobustVideoMatting) | 视频抠像（可选） | GPL-3.0 | 模型文件需自行下载，`tools/matte.py` 只是调用它的脚本。 |
-| [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)、[JetBrains Mono](https://www.jetbrains.com/lp/mono/) | 字体 | SIL OFL 1.1 | 通过 @fontsource 安装。 |
+| Noto Sans SC、Noto Serif SC、站酷快乐体、站酷小薇、站酷庆科黄油体、马善政楷书、JetBrains Mono | 字体 | SIL OFL 1.1 | 都来自 Google Fonts，通过 @fontsource 安装。 |

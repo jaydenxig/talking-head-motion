@@ -1,4 +1,4 @@
-// 全片设置：换风格、换头像位置都只改这里。
+// 全片设置：换风格、开关模块、换头像位置都只改这里。
 export const CONFIG = {
   fps: 30,
   width: 1920,
@@ -8,28 +8,28 @@ export const CONFIG = {
   talk: 'talk.mp4',
   matte: null,
 
-  // 小圆头像：corner 可选 'top-left' | 'top-right'。
-  // crop 控制圆框里取口播画面的哪一块：scale 是放大倍数，x/y 是人脸中心在原画面里的比例位置。
-  avatar: {corner: 'top-right', size: 200, margin: 56, crop: {scale: 0.42, x: 0.5, y: 0.36}},
-
-  // 风格：默认「白底蓝光」。换一套皮只需要改这几个值。
-  theme: {
-    bg: '#F3F5F9',
-    grid: 'rgba(30,60,120,.06)',
-    glowA: 'rgba(77,140,255,.28)',
-    glowB: 'rgba(80,200,230,.20)',
-    ink: '#14181F',
-    sub: '#5A6475',
-    accent: '#2F6BFF',
-    accent2: '#16B5E8',
-    card: '#FFFFFF',
-    shadow: '0 30px 80px rgba(30,60,120,.16)',
-    font: '"Noto Sans SC", "PingFang SC", sans-serif',
-    mono: '"JetBrains Mono", ui-monospace, Menlo, monospace',
+  // 这次要做哪些部分（第 0 步用户打勾的结果）。关掉的部分不渲染，也不用为它写分镜。
+  modules: {
+    cards: true,      // 图卡（关掉后 pip / cutout 都按全屏口播处理）
+    overlays: true,   // 全屏口播上的章节卡、便签、小标签
+    avatar: true,     // 图卡段落的小头像
+    subtitles: true,  // 烧录字幕
+    sfx: true,        // 音效
+    music: false,     // 配乐（需要 public/ 下有 music.file）
   },
 
-  // 字幕：底部白色粗字 + 深色细描边，关键词用主题蓝。
-  subtitle: {size: 54, bottom: 64, stroke: 7, keyword: '#4DB5FF'},
+  // 风格：写一个风格编号（见 styles.js），或者混搭：
+  // style: {base: 'life-1', palette: 'tech-1', font: 'kuaile', avatar: 'hex'}
+  style: 'tech-1',
+
+  // 小头像：corner 可选 'top-left' | 'top-right'。形状由风格里的 avatar 决定，也可以在 style 里单独换。
+  // crop 控制框里取口播画面的哪一块：scale 是框高占原画面高度的比例，x/y 是人脸中心在原画面里的比例位置。
+  avatar: {corner: 'top-right', margin: 56, crop: {scale: 0.42, x: 0.5, y: 0.36}},
+
+  subtitle: {size: 54, bottom: 64},
+
+  // 配乐：只在图卡段落进来，回到口播压低；首尾各 1 秒淡入淡出。
+  music: {file: 'music.mp3', volume: 0.12, duck: 0.35},
 
   // 状态之间的交接：0.3 秒淡入淡出。
   handoff: 0.3,
