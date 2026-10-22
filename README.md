@@ -5,7 +5,7 @@
 
 ![风格样板](docs/styles.jpg)
 
-> 上图是同一段口播套用不同风格的样板（人像是占位剪影）。下图是「零件对照表」：几套风格拆开并排，配色、字体、卡片、字幕、动效音效、头像形状都可以单独挑。
+> 上图是同一段口播套用不同风格的样板（人物是占位的卡通形象，用 `tools/make-placeholder.py` 生成，换成你自己的口播即可）。下图是「零件对照表」：几套风格拆开并排，配色、字体、卡片、字幕、动效音效、头像形状都可以单独挑。
 
 ![零件对照表](docs/parts.jpg)
 
@@ -75,7 +75,8 @@ cp -r talking-head-motion/skills/talking-head-motion ~/.claude/skills/
 cd skills/talking-head-motion/template
 npm install
 npm run sfx          # 下载真实录音音效到 public/sfx/
-# 把你的口播放到 public/talk.mp4
+# 把你的口播放到 public/talk.mp4；还没拍的话，先生成一段卡通人物占位视频试效果：
+python3 tools/make-placeholder.py public/talk.mp4   # 加 --portrait 生成竖着拍的版本
 node tools/make-samples.mjs --category life   # 出这一类的 3 套风格样板（静帧 + 小动图）
 node tools/make-samples.mjs --styles tech-1 --portrait --layouts split,float,pip   # 竖屏：比较三种版式
 # 在 src/config.js 里选定风格，改 src/shots.js 和 src/subs.js
