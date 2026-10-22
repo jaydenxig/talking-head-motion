@@ -16,6 +16,9 @@
 </head>
 <body>
 <!-- 没有多选提问工具时，把这个页面发给用户：点选后复制结果发回给 AI -->
+<h1>做横屏还是竖屏？</h1>
+<label><input type="radio" name="ori" value="横屏" checked><span><b>横屏</b>（16:9，B 站、视频号横屏）</span></label>
+<label><input type="radio" name="ori" value="竖屏"><span><b>竖屏</b>（9:16，抖音、小红书、视频号竖屏）</span></label>
 <h1>这次要做哪些部分？</h1>
 <label class="all"><input type="checkbox" id="all">全选</label>
 <div id="list"></div>
@@ -37,10 +40,12 @@
   const boxes = [...list.querySelectorAll('input')];
   const all = document.getElementById('all');
   const out = document.getElementById('out');
-  const text = () => { const s = boxes.filter((b) => b.checked).map((b) => items[b.dataset.i][0]); return s.length ? `我要做：${s.join('、')}` : ''; };
+  const ori = () => document.querySelector('input[name=ori]:checked').value;
+  const text = () => { const s = boxes.filter((b) => b.checked).map((b) => items[b.dataset.i][0]); return s.length ? `做${ori()}。我要做：${s.join('、')}` : ''; };
   const update = () => { out.textContent = text() || '（还没选）'; all.checked = boxes.every((b) => b.checked); };
   all.onchange = () => { boxes.forEach((b) => (b.checked = all.checked)); update(); };
   boxes.forEach((b) => (b.onchange = update));
+  document.querySelectorAll('input[name=ori]').forEach((r) => (r.onchange = update));
   document.getElementById('copy').onclick = () => { const t = text(); if (t) navigator.clipboard.writeText(t).then(() => (out.textContent = t + '（已复制）')); };
 </script>
 </body>

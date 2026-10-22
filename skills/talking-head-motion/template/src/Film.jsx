@@ -20,6 +20,16 @@ const onAccent = (p) => (lum(p.accent) > 0.62 ? (p.dark ? p.bg : p.ink) : '#fff'
 const Ctx = createContext(null);
 const useLook = () => useContext(Ctx);
 
+// 版式：横屏一种，竖屏三种（split 上图下人 / float 人全屏 + 浮卡 / pip 小头像 + 满屏图卡）。
+// zone 是图卡占的区域；竖屏要避开顶部状态栏（约 180）、底部标题简介（约 20%）和右侧按钮列。
+const layoutOf = (width, height, portraitLayout) => {
+  if (width >= height) return {kind: 'landscape', portrait: false, zone: {top: 0, height, scale: 1}, overlayTop: {chapter: 300, note: 340, tag: 50}};
+  const base = {portrait: true, overlayTop: {chapter: 1020, note: 1060, tag: 200}};
+  if (portraitLayout === 'float') return {...base, kind: 'float', zone: {top: 820, height: 540, scale: 0.8}};
+  if (portraitLayout === 'pip') return {...base, kind: 'pip', zone: {top: 330, height: 1100, scale: 1}};
+  return {...base, kind: 'split', band: 1000, zone: {top: 150, height: 850, scale: 1}};
+};
+
 const GRAIN = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.32  0 0 0 0 0.22  0 0 0 0.16 0'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")`;
 
 // 每种状态的可见度（0..1），镜头边界做 handoff 秒的交叉淡化
@@ -131,9 +141,15 @@ const Pill = ({children, q}) => {
 };
 
 // ---------- 图卡 ----------
-const Center = ({children, out}) => (
-  <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', opacity: out}}>{children}</AbsoluteFill>
-);
+// 图卡放在版式给的区域里居中
+const Center = ({children, out}) => {
+  const {zone} = useLook();
+  return (
+    <div style={{position: 'absolute', left: 0, right: 0, top: zone.top, height: zone.height, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: out}}>
+      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', transform: `scale(${zone.scale})`}}>{children}</div>
+    </div>
+  );
+};
 
 const Cards3 = ({s}) => {
   const {p: pr, out, a, L} = useEnter(s, 6);
@@ -144,7 +160,7 @@ const Cards3 = ({s}) => {
         {c.kicker && <Kicker>{c.kicker}</Kicker>}
         <Title size={72} style={{marginTop: 18}}>{c.title}</Title>
       </div>
-      <div style={{display: 'flex', gap: 36, marginTop: 64}}>
+      <div style={{display: 'flex', flexDirection: L.portrait ? 'column' : 'row', gap: L.portrait ? 26 : 36, marginTop: L.portrait ? 48 : 64}}>
         {c.items.map((t, k) => <Cards3Item key={t} t={t} k={k} a={a} />)}
       </div>
     </Center>
@@ -153,9 +169,18 @@ const Cards3 = ({s}) => {
 const Cards3Item = ({t, k, a}) => {
   const L = useLook();
   const q = useItem(a, cardBeats.item(k));
+  const num = <div style={{fontFamily: MONO, fontSize: 44, fontWeight: 700, color: L.p.accent}}>{String(k + 1).padStart(2, '0')}</div>;
+  // 竖屏：三张卡上下叠，编号和文字排成一行
+  if (L.portrait) {
+    return (
+      <Box style={{width: 800, padding: '30px 40px', display: 'flex', alignItems: 'center', gap: 30, opacity: q, transform: `${L.motion.enter(q)} rotate(${tiltOf(L) * (k - 1)}deg)`}}>
+        {num}<Title size={56}>{t}</Title>
+      </Box>
+    );
+  }
   return (
     <Box style={{width: 360, padding: '34px 40px', opacity: q, transform: `${L.motion.enter(q)} rotate(${tiltOf(L) * (k - 1)}deg)`}}>
-      <div style={{fontFamily: MONO, fontSize: 44, fontWeight: 700, color: L.p.accent}}>{String(k + 1).padStart(2, '0')}</div>
+      {num}
       <Title size={56} style={{marginTop: 26}}>{t}</Title>
     </Box>
   );
@@ -172,7 +197,7 @@ const Window = ({s}) => {
   const pl = useItem(a, cardBeats.pill(c));
   return (
     <Center out={out}>
-      <Box style={{width: 1040, overflow: 'hidden', opacity: pr, transform: `${L.motion.enter(pr)} scale(${zoom}) rotate(${tiltOf(L)}deg)`}}>
+      <Box style={{width: L.portrait ? 960 : 1040, overflow: 'hidden', opacity: pr, transform: `${L.motion.enter(pr)} scale(${zoom}) rotate(${tiltOf(L)}deg)`}}>
         <div style={{height: 56, display: 'flex', alignItems: 'center', padding: '0 22px', position: 'relative', borderBottom: `1px solid ${p.dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)'}`}}>
           {['#FF5F57', '#FEBC2E', '#28C840'].map((col) => <div key={col} style={{width: 16, height: 16, borderRadius: 8, background: col, marginRight: 10}} />)}
           <div style={{position: 'absolute', left: 0, right: 0, textAlign: 'center', fontSize: 26, fontWeight: 700, color: p.ink, fontFamily: L.font.body}}>{c.title}</div>
@@ -249,7 +274,7 @@ const Quote = ({s}) => {
   const c = s.card;
   return (
     <Center out={out}>
-      <Box style={{width: 1100, padding: '56px 70px', opacity: pr, transform: L.motion.enter(pr)}}>
+      <Box style={{width: L.portrait ? 900 : 1100, padding: '56px 70px', opacity: pr, transform: L.motion.enter(pr)}}>
         <Title size={52} style={{lineHeight: 1.5}}>{c.text}</Title>
         {c.by && <div style={{fontSize: 30, color: L.p.sub, marginTop: 24, fontFamily: L.font.body}}>— {c.by}</div>}
       </Box>
@@ -265,14 +290,16 @@ const PillCard = ({s}) => {
 const CARDS = {cards3: Cards3, window: Window, list: List, stat: Stat, quote: Quote, pill: PillCard};
 
 // ---------- 叠在全屏口播上的元素：放在头像的对侧 ----------
+// 竖屏：一律放左边（右边是点赞评论那列），章节卡和便签放在胸前，不挡脸
 const Overlay = ({s, corner}) => {
   const {p: pr, out, L} = useEnter(s, 4);
   const {p} = L;
   const o = s.overlay;
-  const away = corner === 'top-right' ? {left: 70} : {right: 70};
+  const away = L.portrait ? {left: 60, maxWidth: 800} : corner === 'top-right' ? {left: 70} : {right: 70};
+  const top = L.overlayTop;
   if (o.type === 'chapter') {
     return (
-      <div style={{position: 'absolute', top: 300, ...away, opacity: pr * out, transform: L.motion.enter(pr)}}>
+      <div style={{position: 'absolute', top: top.chapter, ...away, opacity: pr * out, transform: L.motion.enter(pr)}}>
         <Box solid style={{padding: '26px 40px 30px'}}>
           <Kicker>{o.part}</Kicker>
           <Title size={72} style={{marginTop: 10}}>{o.title}</Title>
@@ -283,28 +310,28 @@ const Overlay = ({s, corner}) => {
   }
   if (o.type === 'note') {
     return (
-      <div style={{position: 'absolute', top: 340, ...away, opacity: pr * out, transform: `${L.motion.enter(pr)} rotate(-2deg)`}}>
+      <div style={{position: 'absolute', top: top.note, ...away, opacity: pr * out, transform: `${L.motion.enter(pr)} rotate(-2deg)`}}>
         <Box solid style={{padding: '24px 34px'}}><Title size={46}>{o.text}</Title></Box>
       </div>
     );
   }
   return (
-    <div style={{position: 'absolute', top: 50, ...away, padding: '12px 28px', borderRadius: 999, color: onAccent(p), fontSize: 34,
+    <div style={{position: 'absolute', top: top.tag, ...away, padding: '12px 28px', borderRadius: 999, color: onAccent(p), fontSize: 34,
       fontFamily: L.font.sub, fontWeight: L.font.subWeight, background: `linear-gradient(90deg, ${p.accent}, ${p.accent2})`, opacity: pr * out}}>{o.text}</div>
   );
 };
 
 // ---------- 小头像 ----------
-const Avatar = ({opacity, talk, avatar}) => {
-  const {width, height} = useVideoConfig();
+const Avatar = ({opacity, talk, avatar, source}) => {
   const L = useLook();
   const A = L.avatar;
-  const vh = A.h / avatar.crop.scale, vw = vh * width / height;
+  const vh = A.h / avatar.crop.scale, vw = vh * source.width / source.height;
   const side = avatar.corner === 'top-right' ? {right: avatar.margin} : {left: avatar.margin};
+  const top = L.portrait ? 190 : avatar.margin;
   const ring = L.p.dark ? L.p.accent : '#fff';
   const shape = A.clip ? {clipPath: A.clip} : {borderRadius: A.radius, border: `5px solid ${ring}`, boxShadow: '0 14px 40px rgba(0,0,0,.22)'};
   return (
-    <div style={{position: 'absolute', top: avatar.margin, ...side, width: A.w, height: A.h, overflow: 'hidden', opacity, background: ring, ...shape}}>
+    <div style={{position: 'absolute', top, ...side, width: A.w, height: A.h, overflow: 'hidden', opacity, background: ring, ...shape}}>
       <OffthreadVideo src={staticFile(talk)} muted
         style={{position: 'absolute', width: vw, height: vh, left: A.w / 2 - avatar.crop.x * vw, top: A.h / 2 - avatar.crop.y * vh}} />
     </div>
@@ -327,8 +354,8 @@ const Subtitle = ({subs, size, bottom}) => {
     shadow: {color: '#fff', WebkitTextStroke: '4px rgba(20,20,24,.6)', paintOrder: 'stroke fill', textShadow: '0 3px 14px rgba(0,0,0,.45)'},
   }[L.subtitle];
   return (
-    <div style={{position: 'absolute', bottom, width: '100%', textAlign: 'center'}}>
-      <span style={{fontSize: size, fontFamily: L.font.sub, fontWeight: L.font.subWeight, letterSpacing: 1, ...look}}>
+    <div style={{position: 'absolute', bottom, left: L.portrait ? 70 : 0, right: L.portrait ? 70 : 0, textAlign: 'center', lineHeight: 1.45}}>
+      <span style={{fontSize: size, fontFamily: L.font.sub, fontWeight: L.font.subWeight, letterSpacing: 1, boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone', ...look}}>
         {parts.map((x, i) => x.startsWith('[') ? <span key={i} style={{color: kw}}>{x.slice(1, -1)}</span> : x)}
       </span>
     </div>
@@ -336,17 +363,26 @@ const Subtitle = ({subs, size, bottom}) => {
 };
 
 // ---------- 主体 ----------
-// props: shots, subs, look（resolveStyle 的结果）, modules, talk, matte, avatar, subtitle, music, handoff, label
+// props: shots, subs, look（resolveStyle 的结果）, modules, talk, matte, source, avatar, subtitle, music, handoff, portraitLayout, label
+// 横屏还是竖屏看画布尺寸（config.js 的 orientation 决定）
 export const Film = (props) => {
-  const {look, modules: M, talk, matte, avatar, subtitle, music, handoff, label} = props;
+  const {look, modules: M, talk, matte, source, avatar, music, handoff, label} = props;
   const f = useCurrentFrame();
-  const {fps, durationInFrames} = useVideoConfig();
+  const {fps, durationInFrames, width, height} = useVideoConfig();
+  const lay = layoutOf(width, height, props.portraitLayout);
   // 不做图卡时，所有镜头都当全屏口播
   const shots = M.cards ? props.shots : props.shots.map((s) => ({...s, state: 'full', card: undefined}));
-  const L = {...look, handoff};
+  const L = {...look, handoff, ...lay};
   const w = useWeights(shots, handoff);
   const sfx = M.sfx ? buildSfx(fps, shots, look.sfx, M) : [];
   const graphics = Math.max(w.pip, w.cutout);
+  // 浮卡版式里人一直全屏；上图下人版式里人在下半屏
+  const talkOpacity = lay.kind === 'float' ? Math.max(w.full, w.pip) : w.full;
+  const stageOpacity = lay.kind === 'float' ? w.cutout : graphics;
+  const sub = lay.portrait ? props.subtitle.portrait : props.subtitle;
+  // 上图下人：讲图卡时字幕挪到上下两半的交界处，不压住脸
+  const subBottom = lay.kind === 'split' ? interpolate(w.pip, [0, 1], [sub.bottom, height - lay.band - 50]) : sub.bottom;
+  const fit = {width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${source.x * 100}% 50%`};
   const live = (s) => f >= s.from * fps - 1 && f < s.to * fps + 1;
   const musicVol = (fr) => {
     const fade = Math.min(1, fr / fps, (durationInFrames - fr) / fps);
@@ -355,16 +391,25 @@ export const Film = (props) => {
   return (
     <Ctx.Provider value={L}>
       <AbsoluteFill style={{background: look.p.bg}}>
-        <AbsoluteFill style={{opacity: w.full}}><OffthreadVideo src={staticFile(talk)} /></AbsoluteFill>
-        <AbsoluteFill style={{opacity: graphics}}><Stage /></AbsoluteFill>
+        <AbsoluteFill style={{opacity: talkOpacity}}><OffthreadVideo src={staticFile(talk)} style={fit} /></AbsoluteFill>
+        <AbsoluteFill style={{opacity: stageOpacity}}><Stage /></AbsoluteFill>
+        {lay.kind === 'split' && (
+          <div style={{position: 'absolute', left: 0, right: 0, top: lay.band, bottom: 0, overflow: 'hidden', opacity: w.pip, borderTop: `6px solid ${look.p.accent}`}}>
+            <OffthreadVideo src={staticFile(talk)} muted style={fit} />
+          </div>
+        )}
+        {lay.kind === 'float' && (
+          <div style={{position: 'absolute', left: 40, right: 40, top: lay.zone.top - 20, height: lay.zone.height + 40, borderRadius: 36, opacity: w.pip,
+            background: `${look.p.bg}F7`, boxShadow: '0 30px 80px rgba(0,0,0,.28)'}} />
+        )}
         {/* 原位抠像：位置大小与原片完全一致 */}
         <AbsoluteFill style={{opacity: w.cutout}}>
-          {matte ? <OffthreadVideo src={staticFile(matte)} transparent muted /> : <OffthreadVideo src={staticFile(talk)} muted />}
+          {matte ? <OffthreadVideo src={staticFile(matte)} transparent muted style={fit} /> : <OffthreadVideo src={staticFile(talk)} muted style={fit} />}
         </AbsoluteFill>
         {shots.filter((s) => s.card && live(s)).map((s) => { const C = CARDS[s.card.type]; return <C key={s.from} s={s} />; })}
         {M.overlays && shots.filter((s) => s.overlay && live(s)).map((s) => <Overlay key={s.from} s={s} corner={avatar.corner} />)}
-        {M.avatar && <Avatar opacity={w.pip} talk={talk} avatar={avatar} />}
-        {M.subtitles && <Subtitle subs={props.subs} size={subtitle.size} bottom={subtitle.bottom} />}
+        {M.avatar && (lay.kind === 'landscape' || lay.kind === 'pip') && <Avatar opacity={w.pip} talk={talk} avatar={avatar} source={source} />}
+        {M.subtitles && <Subtitle subs={props.subs} size={sub.size} bottom={subBottom} />}
         {label && (
           <div style={{position: 'absolute', top: 34, left: '50%', transform: 'translateX(-50%)', padding: '10px 26px', borderRadius: 12, background: 'rgba(10,10,14,.82)',
             color: '#fff', fontFamily: '"Noto Sans SC"', fontWeight: 700, fontSize: 30, whiteSpace: 'nowrap'}}>{label}</div>
