@@ -2,3 +2,8 @@ node_modules/
 out/
 public/*
 !public/README.md
+.progress.json
+src/sentences.backup.js
+raw/*
+!raw/README.md
+src/takes.backup.js

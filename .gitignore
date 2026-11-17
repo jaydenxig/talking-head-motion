@@ -1,0 +1,5 @@
+.DS_Store
+eval/.env
+eval/work/
+eval/cases/*
+!eval/cases/README.md

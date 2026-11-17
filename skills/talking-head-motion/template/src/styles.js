@@ -28,7 +28,9 @@ export const MOTIONS = {
 };
 
 // 音效包：同一种动作永远配同一个声音。文件见 tools/fetch-sfx.sh
+// tail：每个音效最多放多久（秒），后面淡出截掉。口播底下的音效要短、要干——拖着回音的「叮——」会盖在下一句话上。
 export const SFX_PACKS = {
+  dry: {name: '干脆利落', tail: 0.45, enterGraphics: 'whoosh-short.mp3', cardAppear: 'key-press.mp3', item: 'click-soft.mp3', highlight: 'click.mp3', payoff: 'pop.mp3', overlay: 'click-soft.mp3'},
   crisp: {name: '清脆 UI', enterGraphics: 'whoosh-short.mp3', cardAppear: 'pop.mp3', item: 'click-soft.mp3', highlight: 'click.mp3', payoff: 'ping.mp3', overlay: 'pop.mp3'},
   soft: {name: '柔和温暖', enterGraphics: 'whoosh-short.mp3', cardAppear: 'click-soft.mp3', item: 'click-soft.mp3', highlight: 'sparkle.mp3', payoff: 'chime.mp3', overlay: 'click-soft.mp3'},
   tech: {name: '科技电子', enterGraphics: 'glitch-3.mp3', cardAppear: 'key-press.mp3', item: 'key-press.mp3', highlight: 'click.mp3', payoff: 'notification.mp3', overlay: 'key-press.mp3'},
@@ -44,6 +46,8 @@ export const SUBTITLES = {
   stroke: {name: '白字描边'},
   box: {name: '色块底'},
   shadow: {name: '白字投影'},
+  soft: {name: '细字软描边（不挤）'},
+  band: {name: '通栏底条（中间深两侧淡）'},
 };
 
 // 内容类型。AI 听完口播后先判断属于哪一类，再出这一类的 3 套风格（可以再加 1 套别的类当对照）。
@@ -58,7 +62,7 @@ export const CATEGORIES = {
 
 // 每套风格：p 是配色。dark=true 表示深色底。
 export const STYLES = {
-  'tech-1': {name: '白底蓝光', category: 'tech', bg: 'grid', font: 'sans', card: 'clean', avatar: 'circle', motion: 'spring', sfx: 'crisp', subtitle: 'stroke',
+  'tech-1': {name: '白底蓝光', category: 'tech', bg: 'grid', font: 'sans', card: 'clean', avatar: 'circle', motion: 'spring', sfx: 'dry', subtitle: 'stroke',
     p: {bg: '#F3F5F9', line: 'rgba(30,60,120,.06)', glowA: 'rgba(77,140,255,.28)', glowB: 'rgba(80,200,230,.20)', ink: '#14181F', sub: '#5A6475', accent: '#2F6BFF', accent2: '#16B5E8', card: '#FFFFFF', keyword: '#4DB5FF'}},
   'tech-2': {name: '暗夜霓虹', category: 'tech', bg: 'darkgrid', font: 'qingke', card: 'glass', avatar: 'rounded', motion: 'snap', sfx: 'tech', subtitle: 'stroke',
     p: {dark: true, bg: '#0B0D17', line: 'rgba(120,140,255,.10)', glowA: 'rgba(140,80,255,.40)', glowB: 'rgba(0,220,255,.30)', ink: '#F2F4FF', sub: '#9AA3C7', accent: '#8B5CFF', accent2: '#00E0FF', card: 'rgba(255,255,255,.06)', keyword: '#00E0FF'}},
@@ -79,16 +83,16 @@ export const STYLES = {
   'family-3': {name: '森林绿意', category: 'family', bg: 'blobs', font: 'sans', card: 'soft', avatar: 'rounded', motion: 'spring', sfx: 'soft', subtitle: 'stroke',
     p: {bg: '#EEF3EA', line: 'rgba(0,0,0,0)', glowA: 'rgba(140,190,120,.40)', glowB: 'rgba(230,220,160,.40)', ink: '#22331F', sub: '#6A7E62', accent: '#4F8A3A', accent2: '#A3C46A', card: '#FFFFFF', keyword: '#B8E08A'}},
 
-  'knowledge-1': {name: '白底杂志', category: 'knowledge', bg: 'plain', font: 'serif', card: 'editorial', avatar: 'square', motion: 'smooth', sfx: 'crisp', subtitle: 'stroke',
+  'knowledge-1': {name: '白底杂志', category: 'knowledge', bg: 'plain', font: 'serif', card: 'editorial', avatar: 'square', motion: 'smooth', sfx: 'dry', subtitle: 'stroke',
     p: {bg: '#F4F3EF', line: 'rgba(0,0,0,.05)', glowA: 'rgba(0,0,0,0)', glowB: 'rgba(0,0,0,0)', ink: '#111111', sub: '#666666', accent: '#E8432D', accent2: '#111111', card: '#FFFFFF', keyword: '#FF7A66'}},
   'knowledge-2': {name: '黑板粉笔', category: 'knowledge', bg: 'chalk', font: 'brush', card: 'chalk', avatar: 'circle', motion: 'smooth', sfx: 'soft', subtitle: 'shadow',
     p: {dark: true, bg: '#1F3A30', line: 'rgba(255,255,255,.04)', glowA: 'rgba(255,255,255,.06)', glowB: 'rgba(255,255,255,.04)', ink: '#F4F1E6', sub: '#B9C4B6', accent: '#FFD866', accent2: '#8FD3FF', card: 'rgba(255,255,255,.04)', keyword: '#FFD866'}},
-  'knowledge-3': {name: '学霸笔记', category: 'knowledge', bg: 'lined', font: 'sans', card: 'note', avatar: 'rounded', motion: 'spring', sfx: 'crisp', subtitle: 'stroke',
+  'knowledge-3': {name: '学霸笔记', category: 'knowledge', bg: 'lined', font: 'sans', card: 'note', avatar: 'rounded', motion: 'spring', sfx: 'dry', subtitle: 'stroke',
     p: {bg: '#FBFAF5', line: 'rgba(60,110,200,.12)', glowA: 'rgba(0,0,0,0)', glowB: 'rgba(0,0,0,0)', ink: '#1C2333', sub: '#6A7385', accent: '#3366FF', accent2: '#FFB020', card: '#FFFFFF', keyword: '#FFD24D'}},
 
   'business-1': {name: '深海金', category: 'business', bg: 'darkglow', font: 'serif', card: 'glass', avatar: 'circle', motion: 'smooth', sfx: 'crisp', subtitle: 'stroke',
     p: {dark: true, bg: '#0B1526', line: 'rgba(212,175,95,.06)', glowA: 'rgba(212,175,95,.22)', glowB: 'rgba(60,110,200,.30)', ink: '#F5F0E4', sub: '#A9B2C3', accent: '#D4AF5F', accent2: '#F2D58C', card: 'rgba(255,255,255,.05)', keyword: '#F2D58C'}},
-  'business-2': {name: '商务极简', category: 'business', bg: 'plain', font: 'sans', card: 'editorial', avatar: 'rounded', motion: 'snap', sfx: 'crisp', subtitle: 'box',
+  'business-2': {name: '商务极简', category: 'business', bg: 'plain', font: 'sans', card: 'editorial', avatar: 'rounded', motion: 'snap', sfx: 'dry', subtitle: 'box',
     p: {bg: '#FFFFFF', line: 'rgba(0,0,0,.04)', glowA: 'rgba(0,0,0,0)', glowB: 'rgba(0,0,0,0)', ink: '#0A0A0A', sub: '#6B6B6B', accent: '#0A0A0A', accent2: '#2E6BFF', card: '#F5F5F5', keyword: '#FFD400'}},
   'business-3': {name: '行情红绿', category: 'business', bg: 'darkgrid', font: 'sans', card: 'terminal', avatar: 'circle', motion: 'spring', sfx: 'tech', subtitle: 'stroke',
     p: {dark: true, bg: '#111317', line: 'rgba(255,255,255,.05)', glowA: 'rgba(255,70,70,.18)', glowB: 'rgba(30,200,120,.18)', ink: '#F1F3F6', sub: '#8C93A0', accent: '#FF4D4F', accent2: '#1FCB7A', card: '#191C22', keyword: '#FF6B6B'}},

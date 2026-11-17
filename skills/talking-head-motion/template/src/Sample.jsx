@@ -3,6 +3,8 @@ import {Film, Parts} from './Film.jsx';
 import {CONFIG} from './config.js';
 import {SAMPLE} from './samples.js';
 import {resolveStyle, STYLES, AVATARS} from './styles.js';
+import {MEASURED} from './measured.js';
+import {resolveLayout} from './resolve.js';
 
 const ALL = {cards: true, overlays: true, avatar: true, subtitles: true, sfx: true, music: false};
 
@@ -18,7 +20,7 @@ const scene = (name) => {
 // layout：竖屏版式（split / float / pip），横屏时不用
 const common = (style, modules, layout) => ({
   look: resolveStyle(style), modules: {...ALL, ...modules}, talk: CONFIG.talk, matte: CONFIG.matte, source: CONFIG.source,
-  avatar: CONFIG.avatar, subtitle: CONFIG.subtitle, music: CONFIG.music, handoff: CONFIG.handoff, portraitLayout: layout || CONFIG.portraitLayout,
+  avatar: CONFIG.avatar, subtitle: CONFIG.subtitle, music: CONFIG.music, handoff: CONFIG.handoff, portraitLayout: layout || CONFIG.portraitLayout, measured: MEASURED, handoffStyle: CONFIG.handoffStyle, drift: CONFIG.drift,
 });
 
 export const Sample = ({style, scene: name, label, modules, layout}) => {
@@ -38,7 +40,10 @@ export const Teaser = ({style, label, modules, layout}) => {
 };
 
 // 零件对照表：styles 是这次候选的几套风格（2–4 套）
-export const PartsSheet = ({styles}) => (
-  <Parts looks={styles.map((s) => resolveStyle(s))} names={styles.map((s) => STYLES[s].name)} talk={CONFIG.talk} crop={CONFIG.avatar.crop}
-    shapes={Object.values(AVATARS)} sample={{title: SAMPLE.chapter.title, item: SAMPLE.cards3.items[0], sub: SAMPLE.cards3.sub}} />
-);
+export const PartsSheet = ({styles}) => {
+  const lay = resolveLayout(CONFIG, MEASURED);
+  return (
+    <Parts looks={styles.map((s) => resolveStyle(s))} names={styles.map((s) => STYLES[s].name)} talk={CONFIG.talk} crop={lay.crop} source={lay.source}
+      shapes={Object.values(AVATARS)} sample={{title: SAMPLE.chapter.title, item: SAMPLE.cards3.items[0], sub: SAMPLE.cards3.sub}} />
+  );
+};

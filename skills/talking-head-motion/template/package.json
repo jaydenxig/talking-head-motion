@@ -18,10 +18,19 @@
     "remotion": "4.0.371"
   },
   "scripts": {
+    "next": "node tools/next.mjs",
+    "raw": "node tools/raw.mjs",
+    "cut": "node tools/cut.mjs",
+    "measure": "node tools/measure.mjs",
+    "timeline": "node tools/make-timeline.mjs",
+    "needs": "node tools/needs.mjs",
+    "cards": "node tools/lint.mjs --cards",
+    "check": "node tools/lint.mjs",
+    "storyboard": "node tools/storyboard.mjs",
+    "stills": "node tools/stills.mjs",
     "still": "remotion still src/index.js Talk out/still.png --frame=120",
-    "render": "remotion render src/index.js Talk out/talk.mp4",
+    "render": "node tools/render.mjs",
     "srt": "node tools/make-srt.mjs out/subtitles.srt",
-    "check": "node tools/check-pacing.mjs",
     "sfx": "bash tools/fetch-sfx.sh",
     "samples": "node tools/make-samples.mjs"
   }
