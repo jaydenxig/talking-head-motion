@@ -34,7 +34,14 @@ export const buildSfx = (fps, shots, pack, modules = {cards: true, overlays: tru
     const a = s.from * fps;
     const prev = shots[i - 1];
     if (modules.cards && prev && prev.state === 'full' && s.state !== 'full') add(a - 4, 'enterGraphics');
-    if (modules.overlays && s.overlay && s.overlay.type !== 'tag') add(a + 4, 'overlay');
+    // 浮在人像上的截图：弹出来那一下响，中途换一组时再响一下
+    if (modules.overlays && s.overlay && s.overlay.type === 'steps') {
+      (beatsOf(s).steps || []).forEach((fr) => add(a + fr, 'item'));
+    } else if (modules.overlays && s.overlay && s.overlay.type === 'pics') {
+      const B = beatsOf(s);
+      add(a + (B.pics ?? 4), 'cardAppear');
+      if (B.picsThen !== undefined) add(a + B.picsThen, 'cardAppear');
+    } else if (modules.overlays && s.overlay && s.overlay.type !== 'tag') add(a + 4, 'overlay');
     if (!s.card || !modules.cards) return;
     const B = beatsOf(s);
     // 接着上一镜的录屏没有「弹出」这个动作，就不响

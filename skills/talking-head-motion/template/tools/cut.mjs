@@ -23,7 +23,11 @@ const has = (k) => process.argv.includes(`--${k}`);
 const die = (msg) => { console.error(msg); process.exit(1); };
 const load = async (f) => import(pathToFileURL(path.join(root, f)).href + `?t=${Date.now()}`);
 const {CONFIG} = await load('src/config.js');
-const {CLIPS, TAKES, RAW_JOINED, RAW_WORDS} = await load('src/takes.js');
+const takesMod = await load('src/takes.js');
+const {CLIPS, TAKES, RAW_JOINED, RAW_WORDS} = takesMod;
+const RAW_AOFF = takesMod.RAW_AOFF || {};
+// 这一句在外录里的偏移：逐句对齐过就用逐句的，否则用整条的
+const aoffOf = (t) => (RAW_AOFF[t.id] !== undefined ? RAW_AOFF[t.id] : CLIPS[t.clip].audio ? CLIPS[t.clip].audio.offset : 0);
 const C = {pause: 'tight', speed: 1, loudness: -14, ...(CONFIG.cut || {})};
 const FPS = CONFIG.fps || 30;
 const rawDir = path.join(root, 'raw');
@@ -74,7 +78,8 @@ TAKES.forEach((t, i) => {
     if (v.db > CLIPS[t.clip].noise + 6) risky.push({take: t, side: '后'});
   } else e = t.to + Math.min(P.tail, gapNext * (next ? 0.5 : 1));
   const last = spans[spans.length - 1];
-  if (last && last.clip === t.clip && s <= last.e + 0.5 / FPS) { last.e = e; last.takes.push(t); }
+  // 外录的偏移变了（素材在这里被裁过），就从这里断开成两段，各取各的声音
+  if (last && last.clip === t.clip && s <= last.e + 0.5 / FPS && Math.abs(aoffOf(t) - aoffOf(last.takes[0])) < 0.02) { last.e = e; last.takes.push(t); }
   else spans.push({clip: t.clip, s: Math.max(0, s), e, takes: [t]});
 });
 // 对齐到整帧（统一用 int(x*fps+0.5)，不同工具的四舍五入不一样会差一帧）
@@ -143,7 +148,7 @@ console.log('剪声音…');
   const srcIndex = (file) => { let i = srcs.indexOf(file); if (i < 0) { srcs.push(file); i = srcs.length - 1; } return i; };
   const segs = spans.map((s) => {
     const c = CLIPS[s.clip];
-    const off = c.audio ? c.audio.offset : 0;
+    const off = c.audio ? aoffOf(s.takes[0]) : 0;
     return {src: srcIndex(path.join(rawDir, c.audio ? c.audio.file : c.file)), a: Math.max(0, s.a / FPS + off), d: (s.b - s.a) / FPS};
   });
   const lines = [];

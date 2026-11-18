@@ -397,6 +397,29 @@ export const resolveProject = ({config, shots = [], sentences = [], words = {}, 
       if (c.img && files[c.img]) c.media = files[c.img];
       if (c.src && files[c.src]) c.media = files[c.src];
     }
+    // 一句一条的小提示：每条说到它时出现，下一条出现时上一条退场
+    if (s.overlay && s.overlay.type === 'steps' && Array.isArray(s.overlay.items)) {
+      const o = {...s.overlay};
+      o.items = o.items.map((x) => (typeof x === 'string' ? {text: x} : {...x}));
+      const ser = timeSeries(o.items.map((x) => ({text: x.text, at: x.at})), shot, finder, fps, issues, where, '提示');
+      B.steps = ser.frames;
+      shot.notes.push('提示出现：' + ser.how.map((h, k) => `${k + 1} ${h}`).join('；'));
+      last = Math.max(last, B.steps[B.steps.length - 1] + 14);
+      shot.overlay = o;
+    }
+    // 截图浮在人像上：记下每张图的尺寸（排版用）和出现的时刻
+    if (s.overlay && s.overlay.type === 'pics' && Array.isArray(s.overlay.imgs)) {
+      const o = {...s.overlay};
+      o.items = o.imgs.map((x) => (typeof x === 'string' ? {img: x} : x)).map((x) => ({...x, media: files[x.img] || null}));
+      B.pics = o.at !== undefined ? (at(o.at, '截图出现') ?? 4) : 4;
+      last = Math.max(last, B.pics + 16);
+      if (o.then && Array.isArray(o.then.imgs)) {
+        o.thenItems = o.then.imgs.map((x) => (typeof x === 'string' ? {img: x} : x)).map((x) => ({...x, media: files[x.img] || null}));
+        B.picsThen = o.then.at !== undefined ? (at(o.then.at, '换成第二组截图') ?? B.pics + 30) : B.pics + 30;
+        last = Math.max(last, B.picsThen + 16);
+      }
+      shot.overlay = o;
+    }
     shot.beats = B;
     shot.done = r2(shot.from + last / fps);
     shot.frames = frames;

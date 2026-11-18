@@ -16,7 +16,8 @@ export const subtitleTop = (lay, height, subtitle, on) => {
   if (!on || !subtitle) return null;
   const sub = lay.portrait ? subtitle.portrait : subtitle;
   const bottom = lay.kind === 'split' ? height - lay.band - 50 : sub.bottom;
-  return Math.round(height - bottom - sub.size * 1.5);
+  // 按两行字幕留地方：一句长一点就会折成两行，往上长
+  return Math.round(height - bottom - sub.size * 2.9);
 };
 
 // 这一镜的图卡区域。L 需要：canvas、zone、portrait、layout（resolveLayout 的结果）、subTop
@@ -64,6 +65,27 @@ export const mediaFit = (L, s) => {
   }
   const room = roomFor(z, {top: 24, pill: c.pill, extra: c.caption ? 70 : 0});
   return {z, fit: fitMedia({media: c.media, crop: c.crop, maxW: Math.min(room.w, L.portrait ? 960 : 1300), maxH: room.h, scroll: c.scroll})};
+};
+
+// ---------- 截图浮在人像上：头顶上方的空处放得下就放那里，放不下放胸口；几张并排，一样高 ----------
+export const picsPlace = (L, items) => {
+  const {width: W, height: H} = L.canvas;
+  const fb = faceBoxOf(L);
+  const side = L.portrait ? 36 : 70, gap = 24;
+  const ar = items.map((x) => { const m = x.media, c = x.crop; return c ? c[2] / c[3] : m ? m.width / m.height : 1; });
+  const fit = (top, bottom) => {
+    const availH = bottom - top, availW = W - side * 2 - gap * (items.length - 1);
+    const h = Math.max(0, Math.min(availH, availW / ar.reduce((a, b) => a + b, 0)));
+    const ws = ar.map((a) => a * h), total = ws.reduce((a, b) => a + b, 0) + gap * (items.length - 1);
+    return {h, ws, left: (W - total) / 2, top: top + (availH - h) / 2, gap};
+  };
+  const topSafe = L.portrait ? 230 : 40, floor = L.subFullTop ?? H - 120;
+  if (!fb) return {...fit(topSafe, H * 0.45), where: '上方'};
+  // 浮图可以压住头发，但不能压到眼睛：往下最多到眉毛上方
+  const {face, full, source} = L.layout;
+  const brow = full.map(face.x, face.minY).y - face.h * source.height * full.k * 0.32;
+  const above = fit(Math.min(topSafe, 190), Math.max(fb.y0 - 24, brow)), below = fit(fb.y1 + 24, floor - 20);
+  return above.h >= below.h * 0.8 || above.h >= 420 ? {...above, where: '头顶上方'} : {...below, where: '胸口'};
 };
 
 // ---------- 叠在人像上的小卡片（章节卡 / 便签 / 小标签）放哪：不能压到脸 ----------

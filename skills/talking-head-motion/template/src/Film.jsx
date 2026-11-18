@@ -13,7 +13,7 @@ import '@fontsource/jetbrains-mono/700.css';
 import {MONO} from './styles.js';
 import {buildSfx, beatsOf} from './sfx.js';
 import {resolveLayout} from './resolve.js';
-import {layoutOf, subtitleTop, zoneFor, mediaFit, overlayPlace} from './layout.js';
+import {layoutOf, subtitleTop, zoneFor, mediaFit, overlayPlace, picsPlace, faceBoxOf} from './layout.js';
 
 const CLAMP = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'};
 // 强调色上的文字：强调色偏亮就用深色字，偏暗就用白字
@@ -417,6 +417,51 @@ const ICON_PATHS = {
   phone: 'M8 2h8a1 1 0 011 1v18a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1z M11 18h2',
   check: 'M12 3a9 9 0 100 18 9 9 0 000-18z M8 12l3 3 5-6',
 };
+// 一句一条的小提示：半透明深色小条，浮在头顶上方；说到哪条换哪条，同一时刻只有一条
+const StepMark = ({mark, k, size}) => {
+  const L = useLook();
+  const col = {ok: '#22A05A', no: '#E84848', maybe: '#E6961E'}[mark] || L.p.accent;
+  return (
+    <div style={{width: size, height: size, borderRadius: size / 2, background: col, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: size * 0.55, fontFamily: '"Noto Sans SC", sans-serif'}}>
+      {mark === 'ok' ? '✓' : mark === 'no' ? '✕' : mark === 'maybe' ? '?' : ICON_PATHS[mark] ? <Icon name={mark} size={size * 0.62} color="#fff" /> : k + 1}
+    </div>
+  );
+};
+const Steps = ({s}) => {
+  const L = useLook();
+  const f = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const o = s.overlay, B = beatsOf(s);
+  const a = Math.round(s.from * fps), end = Math.round(s.to * fps);
+  const fb = faceBoxOf(L);
+  const {width: W} = L.canvas;
+  const H = 150, bottom = fb ? Math.max(L.portrait ? 380 : 200, fb.y0 + 10) : 520;
+  return (
+    <>
+      {o.items.map((x, k) => {
+        const t0 = a + B.steps[k], t1 = k + 1 < o.items.length ? a + B.steps[k + 1] : end;
+        if (f < t0 - 1 || f > t1 + 8) return null;
+        const q = spring({frame: f - t0, fps, config: {damping: 14, stiffness: 180}});
+        const gone = interpolate(f, [t1 - 2, t1 + 6], [1, 0], CLAMP);
+        return (
+          <div key={k} style={{position: 'absolute', left: 0, right: 0, top: bottom - H, height: H, display: 'flex', justifyContent: 'center', alignItems: 'center',
+            opacity: q * gone, transform: `translateY(${(1 - q) * 30 - (1 - gone) * 26}px) scale(${0.9 + 0.1 * q})`}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: 22, padding: '18px 34px 18px 20px', borderRadius: 999, maxWidth: W - 100,
+              background: 'rgba(14,17,26,.62)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,.25)'}}>
+              <StepMark mark={x.mark || (o.items.length > 1 ? 'num' : 'ok')} k={k} size={64} />
+              <div style={{display: 'flex', flexDirection: 'column'}}>
+                <div style={{color: '#fff', fontFamily: L.font.sub, fontWeight: 900, fontSize: 46, lineHeight: 1.15, whiteSpace: 'nowrap'}}>{x.text}</div>
+                {x.sub && <div style={{color: 'rgba(255,255,255,.78)', fontFamily: '"Noto Sans SC", sans-serif', fontWeight: 500, fontSize: 30, marginTop: 4, whiteSpace: 'nowrap'}}>{x.sub}</div>}
+              </div>
+              {o.items.length > 1 && <div style={{color: 'rgba(255,255,255,.55)', fontFamily: MONO, fontSize: 24, marginLeft: 6, alignSelf: 'flex-end'}}>{k + 1}/{o.items.length}</div>}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
 const Icon = ({name, size, color}) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={ICON_PATHS[name] || ICON_PATHS.check} /></svg>
 );
@@ -575,7 +620,74 @@ const CARDS = {cards3: Cards3, window: Window, list: List, stat: Stat, quote: Qu
 
 // ---------- 叠在全屏口播上的元素：放在头像的对侧 ----------
 // 竖屏：一律放左边（右边是点赞评论那列），章节卡和便签放在胸前，不挡脸
+// 截图浮在人像上：几张一起弹出来（错开一点点），白边圆角，不压脸
+const PicOne = ({x, w, h, a, at, k, out}) => {
+  const f = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const L = useLook();
+  const q = spring({frame: f - a - at - k * 4, fps, config: L.motion.spring});
+  const m = x.media || {width: w, height: h};
+  const c = x.crop ? {x: x.crop[0], y: x.crop[1], w: x.crop[2], h: x.crop[3]} : {x: 0, y: 0, w: m.width, h: m.height};
+  const kk = w / c.w;
+  return (
+    <div style={{position: 'relative', width: w, height: h, borderRadius: 14, overflow: 'hidden', boxShadow: '0 14px 36px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.12)',
+      opacity: q * out, transform: `translateY(${(1 - q) * 40}px) scale(${0.9 + 0.1 * q})`}}>
+      <Img src={staticFile(x.img)} style={{position: 'absolute', left: -c.x * kk, top: -c.y * kk, width: m.width * kk, height: m.height * kk, maxWidth: 'none'}} />
+    </div>
+  );
+};
+const PicGroup = ({items, a, at, out, fan}) => {
+  const L = useLook();
+  const pl = picsPlace(L, items);
+  // fan：几张叠着摊开、各自歪一点，每张能比并排时大不少（适合开头「砸」几张封面）
+  if (fan && items.length > 1) {
+    const {width: W} = L.canvas;
+    // 尽量靠上：底边别压到头发，露出头顶
+    const n = items.length, w = W * (n === 2 ? 0.5 : 0.42), step = (W - 70 - w) / (n - 1);
+    return (
+      <>
+        {items.map((x, k) => {
+          const m = x.media || {width: 3, height: 4};
+          const ar = x.crop ? x.crop[2] / x.crop[3] : m.width / m.height, h = w / ar;
+          const rot = (k - (n - 1) / 2) * 7;
+          return (
+            <div key={k} style={{position: 'absolute', left: 35 + step * k, top: (L.portrait ? 95 : 30) + Math.abs(k - (n - 1) / 2) * 30, transform: `rotate(${rot}deg)`, zIndex: k}}>
+              <PicOne x={x} w={w} h={h} a={a} at={at} k={k} out={out} />
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+  return (
+    <div style={{position: 'absolute', left: pl.left, top: pl.top, display: 'flex', gap: pl.gap, alignItems: 'center'}}>
+      {items.map((x, k) => <PicOne key={k} x={x} w={pl.ws[k]} h={pl.h} a={a} at={at} k={k} out={out} />)}
+    </div>
+  );
+};
+const Pics = ({s}) => {
+  const L = useLook();
+  const f = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const o = s.overlay, B = beatsOf(s);
+  const a = Math.round(s.from * fps);
+  const end = interpolate(f, [s.to * fps - L.handoff * fps, s.to * fps], [1, 0], CLAMP);
+  // 有第二组：第一组在换的那一刻淡出，第二组接着弹出来
+  const swap = o.thenItems ? interpolate(f - a, [B.picsThen - 5, B.picsThen], [1, 0], CLAMP) : 1;
+  return (
+    <>
+      <PicGroup items={o.items} a={a} at={B.pics ?? 4} out={end * swap} fan={o.layout === 'fan'} />
+      {o.thenItems && <PicGroup items={o.thenItems} a={a} at={B.picsThen} out={end} />}
+    </>
+  );
+};
+
 const Overlay = ({s, corner}) => {
+  if (s.overlay.type === 'pics') return <Pics s={s} />;
+  if (s.overlay.type === 'steps') return <Steps s={s} />;
+  return <OverlayCard s={s} corner={corner} />;
+};
+const OverlayCard = ({s, corner}) => {
   const {p: pr, out, L} = useEnter(s, 4);
   const {p} = L;
   const o = s.overlay;
@@ -653,7 +765,7 @@ const SUB_LOOKS = {
   box: {color: '#fff', background: 'rgba(14,14,20,.78)', padding: '6px 24px', borderRadius: 10},
   shadow: {color: '#fff', WebkitTextStroke: '4px rgba(20,20,24,.6)', paintOrder: 'stroke fill', textShadow: '0 3px 14px rgba(0,0,0,.45)'},
   soft: {color: '#fff', fontWeight: 700, letterSpacing: 4, WebkitTextStroke: '3px rgba(10,14,24,.55)', paintOrder: 'stroke fill', textShadow: '0 0 10px rgba(0,0,0,.6), 0 2px 5px rgba(0,0,0,.5)'},
-  band: {color: '#fff', fontWeight: 700, letterSpacing: 3},
+  band: {color: '#fff', fontWeight: 700, letterSpacing: 1},
 };
 const Subtitle = ({subs, size, bottom}) => {
   const f = useCurrentFrame();

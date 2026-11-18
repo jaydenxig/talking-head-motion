@@ -29,6 +29,7 @@
     "storyboard": "node tools/storyboard.mjs",
     "stills": "node tools/stills.mjs",
     "still": "remotion still src/index.js Talk out/still.png --frame=120",
+    "cover": "node tools/cover-frames.mjs",
     "render": "node tools/render.mjs",
     "srt": "node tools/make-srt.mjs out/subtitles.srt",
     "sfx": "bash tools/fetch-sfx.sh",

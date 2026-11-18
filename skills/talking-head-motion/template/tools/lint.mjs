@@ -38,7 +38,7 @@ export const runLint = async () => {
   const {STATES, CARD_TYPES, OVERLAY_TYPES, SHOT_FIELDS} = await load('src/schema.js');
   const {resolveProject, resolveLayout, textWidth} = await load('src/resolve.js');
   const {resolveStyle, STYLES} = await load('src/styles.js');
-  const {layoutOf, subtitleTop, mediaFit, overlayPlace, faceBoxOf} = await load('src/layout.js');
+  const {layoutOf, subtitleTop, mediaFit, overlayPlace, faceBoxOf, picsPlace} = await load('src/layout.js');
   const {sizeOf} = await load('src/resolve.js');
   const SENTENCES = sen.SENTENCES || [], WORDS = sen.WORDS || {}, DURATION = sen.DURATION || 0;
   const pub = (f) => path.join(root, 'public', String(f));
@@ -157,6 +157,32 @@ export const runLint = async () => {
       else if (f.type === 'timed') {
         if (v && typeof v === 'object') { checkText(v.text, f, where, name); if (v.at !== undefined) checkAnchor(v.at, where, name); } else checkText(v, f, where, name);
       } else if (f.type === 'rect') checkRect(v, where, name, media);
+      else if (f.type === 'piclist') {
+        if (!Array.isArray(v) || !v.length) { err(where, `${name} 要写成 ['a.jpg', 'b.jpg'] 这样的一组截图文件名`); continue; }
+        if (v.length > f.max) err(where, `${name} 有 ${v.length} 张，最多 ${f.max} 张并排，再多就看不清了`);
+        v.forEach((x, i) => {
+          const img = typeof x === 'string' ? x : x && x.img;
+          if (typeof img !== 'string') return err(where, `${name} 第 ${i + 1} 张要写文件名，或 {img: '文件名', crop: [x, y, 宽, 高]}`);
+          if (!existsSync(pub(img))) err(where, `${name} 第 ${i + 1} 张「${img}」在 public/ 下没有这个文件`);
+          else if (!files[img]) warn(where, `还没量过 ${img} 的尺寸，跑 npm run measure`);
+          if (x && typeof x === 'object' && x.crop !== undefined) checkRect(x.crop, where, `${name} 第 ${i + 1} 张的 crop`, files[img]);
+        });
+      }
+      else if (f.type === 'steplist') {
+        if (!Array.isArray(v) || !v.length) { err(where, `${name} 要写成 [{text: '…', at: '…'}] 这样的一组`); continue; }
+        if (v.length > f.max) err(where, `${name} 有 ${v.length} 条，最多 ${f.max} 条`);
+        v.forEach((x, i) => {
+          const t = typeof x === 'string' ? x : x && x.text;
+          checkText(t, {max: 14}, where, `${name} 第 ${i + 1} 条`);
+          if (x && typeof x === 'object' && x.sub !== undefined) checkText(x.sub, {max: 16}, where, `${name} 第 ${i + 1} 条的小字`);
+          if (x && typeof x === 'object' && x.at !== undefined) checkAnchor(x.at, where, `${name} 第 ${i + 1} 条`);
+        });
+      }
+      else if (f.type === 'picnext') {
+        if (!v || typeof v !== 'object' || !Array.isArray(v.imgs)) { err(where, `${name} 要写成 {imgs: ['c.jpg'], at: '说到哪个词时换'}`); continue; }
+        v.imgs.forEach((x, i) => { const img = typeof x === 'string' ? x : x && x.img; if (typeof img !== 'string' || !existsSync(pub(img))) err(where, `${name} 第 ${i + 1} 张「${img}」在 public/ 下没有这个文件`); });
+        if (v.at !== undefined) checkAnchor(v.at, where, name);
+      }
       else if (f.type === 'words') { if (!Array.isArray(v) || v.some((x) => typeof x !== 'string' || !x.trim())) err(where, `${name} 要写成 ['email', '张三'] 这样的一组词`); }
       else if (f.type === 'focus') {
         const list = Array.isArray(v) ? v : [v];
@@ -195,7 +221,7 @@ export const runLint = async () => {
     }
     if (s.overlay !== undefined) {
       if (!s.overlay || typeof s.overlay !== 'object') err(where, 'overlay 要写成 {type: \'…\', …}');
-      else if (!OVERLAY_TYPES[s.overlay.type]) err(where, `overlay 的 type 写的是 ${JSON.stringify(s.overlay.type)}，只能是 chapter（章节卡）/ note（便签）/ tag（小标签）`);
+      else if (!OVERLAY_TYPES[s.overlay.type]) err(where, `overlay 的 type 写的是 ${JSON.stringify(s.overlay.type)}，只能是 chapter（章节卡）/ note（便签）/ tag（小标签）/ pics（截图浮在人像上）`);
       else checkFields(s.overlay, OVERLAY_TYPES[s.overlay.type], where, OVERLAY_TYPES[s.overlay.type].name);
       if (s.state !== 'full') warn(where, 'overlay 是叠在全屏人像上的，这一镜是图卡，两样东西会挤在一起。去掉 overlay，或者把这一镜改成 full');
     }
@@ -272,7 +298,11 @@ export const runLint = async () => {
     if (c && c.pill) echo(c.pill, '结论');
     if (o && o.type === 'note' && M.overlays !== false) echo(o.text, '便签');
     // 叠在人像上的小卡片不能压到脸
-    if (o && geo && M.overlays !== false && s.state === 'full' && overlayPlace(geo, o, CONFIG.avatar.corner).overlap) err(where, `${{chapter: '章节卡', note: '便签', tag: '小标签'}[o.type]}「${o.title || o.text}」会压到脸：这条口播里脸的上方、下方都放不下这么大的卡片。把字改短，或者这一镜不放`);
+    if (o && o.type === 'pics' && geo && o.items) {
+      const pl = picsPlace(geo, o.items);
+      if (pl.h < 240) warn(where, `浮在人像上的截图只能放到 ${Math.round(pl.h)} 像素高（放在${pl.where}），看不太清。少放一张、用 crop 只取要看的那一块，或者改成图卡（pip）`);
+    }
+    if (o && o.type !== 'pics' && geo && M.overlays !== false && s.state === 'full' && overlayPlace(geo, o, CONFIG.avatar.corner).overlap) err(where, `${{chapter: '章节卡', note: '便签', tag: '小标签'}[o.type]}「${o.title || o.text}」会压到脸：这条口播里脸的上方、下方都放不下这么大的卡片。把字改短，或者这一镜不放`);
     // 用几行字拼出来的窗口不是截图
     if (c && c.type === 'window' && !c.img && c.lines && !c.mock) warn(where, `这个窗口里的内容是用几行字拼出来的，不是真截图。它如果是在模仿真实的界面、聊天或数据，加上 mock: true（角上会标「示意」），免得观众当成真的`);
     // 一张卡出全以后挂太久

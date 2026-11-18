@@ -89,6 +89,42 @@ const align = (clipDb, extDb, clipPcm, extPcm) => {
   return {offset: Math.round(mid * 1000) / 1000, score: r2(fine.score), drift: r2(Math.max(...offs) - Math.min(...offs))};
 };
 
+// 一句话在外录里的准确位置：在这句前后各留一点的窗口里，按音量起伏找最吻合的偏移（先试整条的偏移，对不上再大范围找），再用波形细对
+const takeOffset = (clipDb, extDb, clipPcm, extPcm, base, from, to) => {
+  let a = Math.max(0, from - 0.8), b = Math.min(clipDb.length / 100, to + 0.8);
+  if (b - a < 3) { const m = (a + b) / 2; a = Math.max(0, m - 1.5); b = Math.min(clipDb.length / 100, m + 1.5); }
+  const i0 = Math.round(a * 100), len = Math.round((b - a) * 100);
+  const w = new Float32Array(len); let mw = 0;
+  for (let k = 0; k < len; k++) { w[k] = Math.max(-70, clipDb[i0 + k]); mw += w[k]; }
+  mw /= len || 1; for (let k = 0; k < len; k++) w[k] -= mw;
+  const score = (lag) => { // lag：外录比素材晚多少格（10 毫秒一格）
+    let ab = 0, aa = 0, bb = 0, mb = 0;
+    const j0 = i0 + lag; if (j0 < 0 || j0 + len > extDb.length) return -1;
+    for (let k = 0; k < len; k++) mb += Math.max(-70, extDb[j0 + k]); mb /= len;
+    for (let k = 0; k < len; k++) { const y = Math.max(-70, extDb[j0 + k]) - mb; ab += w[k] * y; aa += w[k] * w[k]; bb += y * y; }
+    return ab / (Math.sqrt(aa * bb) + 1e-9);
+  };
+  const b0 = Math.round(base * 100);
+  let best = b0, top = -2;
+  for (let l = b0 - 3; l <= b0 + 3; l++) { const sc = score(l); if (sc > top) { top = sc; best = l; } }
+  if (top < 0.8) for (let l = b0 - 300; l <= b0 + 40000; l++) { const sc = score(l); if (sc > top + 0.02) { top = sc; best = l; } }
+  // 细对：比 1 毫秒一格的音量起伏（不直接比波形——两个话筒的极性常常是反的，直接比会对到错的地方），±80 毫秒
+  const env = (pcm, start, ms) => { const out = new Float32Array(ms); const h = SR / 1000; for (let k = 0; k < ms; k++) { let e = 0; const i = start + k * h; for (let m = 0; m < h * 4; m++) { const v = pcm[i + m] || 0; e += v < 0 ? -v : v; } out[k] = e; } return out; };
+  const ms = 2400, s0 = Math.round(((from + to) / 2 - 1.2) * SR);
+  const A = env(clipPcm, Math.max(0, s0), ms);
+  const B = env(extPcm, Math.max(0, s0 + Math.round(best / 100 * SR) - 80 * (SR / 1000)), ms + 160);
+  let ma = 0; for (const v of A) ma += v; ma /= ms;
+  let fine = 0, ft = -Infinity;
+  for (let d = 0; d <= 160; d++) {
+    let mb = 0; for (let k = 0; k < ms; k++) mb += B[k + d]; mb /= ms;
+    let ab = 0, aa = 0, bb = 0;
+    for (let k = 0; k < ms; k++) { const x = A[k] - ma, y = B[k + d] - mb; ab += x * y; aa += x * x; bb += y * y; }
+    const c = ab / (Math.sqrt(aa * bb) + 1e-9);
+    if (c > ft) { ft = c; fine = (d - 80) * (SR / 1000); }
+  }
+  return best / 100 + fine / SR;
+};
+
 // ---------- 逐条素材识别 ----------
 const audios = audioNames.map((f, i) => { const pcm = loadPcm(path.join(rawDir, f), tmp, `ext${i}`); return {file: f, pcm, db: envelope(pcm)}; });
 const clips = [];
@@ -114,7 +150,18 @@ clipNames.forEach((file, ci) => {
     } else notes.push(`${file} 在另外录的声音里没找到对得上的地方（最像的是 ${tries[0].file}，相似度只有 ${tries[0].score}），这条用素材自己的声音`);
   }
   clips.push({file, ...meta, sig: sig(file), noise: Math.round(thr), audio});
-  sents.forEach((s) => takes.push({id: `R${String(++n).padStart(3, '0')}`, clip: ci, from: s.from, to: s.to, keep: true, text: s.text, words: s.words, joined: s.joined}));
+  const mine = sents.map((s) => ({id: `R${String(++n).padStart(3, '0')}`, clip: ci, from: s.from, to: s.to, keep: true, text: s.text, words: s.words, joined: s.joined}));
+  // 逐句对齐另外录的声音：手机素材中途被裁过（删掉过一段）的话，整条只用一个偏移，后半段就全错位了
+  if (audio) {
+    const ext = audios.find((x) => x.file === audio.file);
+    const offs = mine.map((t) => takeOffset(db, ext.db, pcm, ext.pcm, audio.offset, t.from, t.to));
+    // 个别句子测歪了（前后两句一致、它不一致）就跟前后走
+    for (let k = 1; k + 1 < offs.length; k++) if (Math.abs(offs[k - 1] - offs[k + 1]) < 0.02 && Math.abs(offs[k] - offs[k - 1]) > 0.02) offs[k] = offs[k - 1];
+    mine.forEach((t, k) => { t.aoff = Math.round(offs[k] * 1000) / 1000; });
+    const jumps = mine.slice(1).filter((t, k) => Math.abs(t.aoff - mine[k].aoff) > 0.05);
+    if (jumps.length) notes.push(`${file} 中途被裁过 ${jumps.length} 处（另外录的声音里比素材多出了几段），已经逐句对齐：${jumps.map((t) => `${t.id} 前后差了 ${Math.round((t.aoff - mine[mine.indexOf(t) - 1].aoff) * 10) / 10} 秒`).join('，')}`);
+  }
+  takes.push(...mine);
 });
 if (!takes.length) die('没识别出任何句子。素材里有人说话吗？');
 
@@ -220,6 +267,7 @@ const out = [
   '',
   '// 机器用的数据（逐词时间、哪些句子和上一句连着说），别改。',
   `export const RAW_JOINED = ${JSON.stringify(takes.filter((t) => t.joined).map((t) => t.id))};`,
+  `export const RAW_AOFF = ${JSON.stringify(Object.fromEntries(takes.filter((t) => t.aoff !== undefined).map((t) => [t.id, t.aoff])))};`,
   'export const RAW_WORDS = {',
   ...takes.map((t) => `  ${t.id}: ${JSON.stringify(t.words)},`),
   '};',

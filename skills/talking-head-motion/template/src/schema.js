@@ -146,6 +146,15 @@ export const CARD_TYPES = {
 export const OVERLAY_TYPES = {
   chapter: {name: '章节卡', example: "{say: 'S03', state: 'full', overlay: {type: 'chapter', part: 'PART 01', title: '眼里有活'}}", use: '进入新的一部分时', fields: {part: {type: 'text', max: 12, desc: '如 PART 01'}, title: {type: 'text', required: true, max: 10, desc: '这一部分的名字'}}},
   note: {name: '便签', example: "{say: 'S06', state: 'full', overlay: {type: 'note', text: '音效只用真实录音'}}", use: '一句重点', fields: {text: {type: 'text', required: true, max: 14, desc: '便签上的字'}}},
+  pics: {name: '截图浮在人像上', example: "{say: 'S01-S02', state: 'full', overlay: {type: 'pics', imgs: ['cover1.jpg', 'cover2.jpg']}}",
+    use: '人照样整张脸出镜，截图浮在头顶上方的空处（放不下就放胸口），一张或几张并排同时出现。讲话为主、截图只是让观众扫一眼时用它，不用把人缩小。要观众细看的长截图还是用图卡（pip）',
+    fields: {imgs: {type: 'piclist', required: true, min: 1, max: 3, desc: "截图文件名，几张并排：['a.jpg', 'b.jpg']；只要图的一块就写 {img: 'a.jpg', crop: [x, y, 宽, 高]}"},
+      at: {type: 'anchor', desc: '说到哪个词时出现，不写就是这一镜一开始'},
+      layout: {type: 'text', max: 4, desc: "'fan'：几张叠着摊开、各自歪一点，每张更大（开头甩封面用）；不写就是并排"},
+      then: {type: 'picnext', desc: "这一镜后半段换成另一组截图：{imgs: ['c.jpg'], at: '说到哪个词时换'}。一句话里前后讲两件事时用"}}},
+  steps: {name: '一句一条的小提示', example: "{say: 'S21-S27', state: 'full', overlay: {type: 'steps', items: [{text: '护照', sub: '我和群友都用这个', mark: 'ok', at: '护照'}, {text: '签证', sub: '有人过，不保证', mark: 'maybe', at: '签证'}, {text: '身份证 / 驾驶证', sub: '别试', mark: 'no', at: '身份证'}]}}",
+    use: '在头顶上方弹出一条小小的半透明提示，说到哪条换哪条（同一时刻只有一条），不挡画面。讲经过、讲结论、讲注意事项时用，代替一整张白卡',
+    fields: {items: {type: 'steplist', required: true, min: 1, max: 6, desc: "每一条：{text: '主字', sub: '小字（可不写）', mark: 'ok' / 'no' / 'maybe' / 'num'（序号）/ 图标名（phone、web、doc…）, at: '说到哪个词时出现'}"}}},
   tag: {name: '小标签', example: "{say: 'S01', state: 'full', overlay: {type: 'tag', text: '实机画面 · 没有加速'}}", use: '说明「这是什么」', fields: {text: {type: 'text', required: true, max: 20, desc: '标签上的字'}}},
 };
 

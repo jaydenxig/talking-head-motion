@@ -24,7 +24,8 @@ export const durationOf = (file) => Number(run('ffprobe', ['-v', 'error', '-show
 // 把任何音视频解成 16k 单声道的采样
 export const loadPcm = (file, tmp, name = 'a') => {
   const wav = path.join(tmp, `${name}.wav`);
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', file, '-vn', '-ar', String(SR), '-ac', '1', '-c:a', 'pcm_s16le', wav]);
+  // aresample=async：按时间戳解码。手机里剪过的视频，声音在剪切处的时间戳会有小缺口，不按时间戳解码的话剪切点之后会错开几十毫秒
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', file, '-vn', '-af', 'aresample=async=1:min_hard_comp=0.01:first_pts=0', '-ar', String(SR), '-ac', '1', '-c:a', 'pcm_s16le', wav]);
   const raw = readFileSync(wav);
   const at = raw.indexOf('data') + 8;
   return new Int16Array(raw.buffer, raw.byteOffset + at, Math.floor((raw.length - at) / 2));

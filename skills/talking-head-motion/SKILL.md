@@ -99,7 +99,7 @@ description: 给横屏或竖屏口播视频加图卡动效、小头像、烧录�
 8. **打码**（`references/masking.md`）：截图里的真名、公司名、金额、邮箱，在卡片上写 `mask`，只糊那几个字。
 9. **渲染**：`npm run render`（检查没过不会开始渲染）。开了音效会一次出两条：有音效版和无音效版，两条都交给用户。字幕烧进画面，`npm run srt` 导出 `.srt`。
 10. **配乐**：用户选了曲子就放到 `public/`，打开 `modules.music`，模板会只在图卡段落把音乐抬起来、口播时压低；也可以让用户自己在剪映里加。
-11. **发布包**（用户最后剪完后）：封面见 `references/cover.md`，各平台文案见 `references/publishing.md`。
+11. **发布包**（用户最后剪完后）：封面见 `references/cover.md`（封面用哪一帧先跑 `npm run cover` 筛），各平台文案见 `references/publishing.md`。
 
 ## 每期结束后
 
